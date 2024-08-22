@@ -66,6 +66,7 @@ class standard_formulas:
         self.C_uf = sp.Symbol("C^{u\phi}")
         self.C_uG = sp.Symbol("C^{uG}")
         self.C_uG_star = sp.Symbol("C^{uG*}")
+        self.C_HG = sp.Symbol("C^{\phi G}")
 
     def setup_gamma_matrices(self):
         """

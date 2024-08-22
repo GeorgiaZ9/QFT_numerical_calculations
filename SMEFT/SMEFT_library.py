@@ -35,7 +35,7 @@ class SMEFT:
 
     def uG_operator_ff(self, p3, psi1, psi2, representation="Lorentz"):
         """
-        Returns the result of the uG coupling matrix for SMEFT.
+        Returns the result of the uG operator (SMEFT) applied to two incoming spinors (fermions).
         """
         if representation == "Lorentz":
             P = p3.transpose() * self.SF.metric()
@@ -68,7 +68,8 @@ class SMEFT:
         self, p3, v, psi2, antispinor=False, representation="Lorentz", propagator=False
     ):
         """
-        Returns the result of the uG coupling matrix for SMEFT.
+        Returns the result of the uG operator (SMEFT) applied to an incoming spinor (fermion)
+        and an incoming vector (boson).
         """
         if representation == "Lorentz":
             P = p3.transpose() * self.SF.metric()
@@ -194,3 +195,83 @@ class SMEFT:
         u_simplified = [sp.simplify(component) for component in u]
 
         return sp.Matrix(u_simplified)
+
+    def HG_operator_gg(
+        self,
+        g1,
+        g2,
+        p1,
+        p2,
+        representation="Lorentz",
+    ):
+        """
+        Returns the result of the contraction of
+        the operator HG with gluon vector fields g1, g2.
+        """
+
+        if representation == "Lorentz":
+            P1 = p1  # .transpose() * self.SF.metric()
+            P2 = p2  # .transpose() * self.SF.metric()
+            g1 = g1
+            g2 = g2
+
+        elif representation == "lightcone":
+
+            P1 = self.SF.inverse_lightcone_rep(p1)
+            P2 = self.SF.inverse_lightcone_rep(p2)
+            g1 = self.SF.inverse_lightcone_rep(g1)
+            g2 = self.SF.inverse_lightcone_rep(g2)
+
+        sum = 0
+        p1_p2 = P1.transpose() * self.SF.metric() * P2
+        g1_P2 = g1.transpose() * self.SF.metric() * P2
+        P1_g2 = P1.transpose() * self.SF.metric() * g2
+
+        term1 = sp.Matrix([g1_P2 * P1_g2])  # Dot product or element-wise multiplication
+        term2 = p1_p2[0, 0] * g1.transpose() * self.SF.metric() * g2
+
+        sum = 4 * I * self.SF.v * self.SF.C_HG * (term1 - term2)
+
+        scalar_output_current = sum
+
+        return scalar_output_current
+
+    def HG_operator_Hg(
+        self,
+        g1,
+        H,
+        p1,
+        p2,
+        representation="Lorentz",
+    ):
+        """
+        Returns the result of the contraction of
+        the operator HG with gluon vector fields g1, g2.
+        """
+
+        if representation == "Lorentz":
+            P1 = p1  # .transpose() * self.SF.metric()
+            P2 = p2  # .transpose() * self.SF.metric()
+            g1 = g1
+
+        elif representation == "lightcone":
+
+            P1 = self.SF.four_vector_light_cone(p1)
+            P2 = self.SF.four_vector_light_cone(p2)
+            g1 = self.SF.four_vector_light_cone(g1)
+
+        sum = 0
+        p1_p2 = P1.transpose() * self.SF.metric() * P2
+        g1_P2 = g1.transpose() * self.SF.metric() * P2
+
+        term1 = g1_P2[0, 0] * P1  # Dot product or element-wise multiplication
+        term2 = p1_p2[0, 0] * g1.transpose() * self.SF.metric()
+
+        g2 = 4 * I * self.SF.v * self.SF.C_HG * (term1 - term2.transpose()) * H
+
+        g2_simplified = [sp.simplify(component) for component in g2]
+
+        if representation == "lightcone":
+            g2_simplified = self.SF.inverse_lightcone_rep(g2_simplified)
+
+        return sp.Matrix(g2_simplified)
